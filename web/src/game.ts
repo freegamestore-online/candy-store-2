@@ -12,7 +12,7 @@ const JAR_TYPES = ["gummy", "sweet", "sour"] as const;
 type CandyType = (typeof JAR_TYPES)[number];
 
 interface Order {
-  items: Partial<Record<CandyType, number>>; // e.g. { gummy: 2, sour: 1 }
+  items: Partial<Record<CandyType, number>>;
   filled: Partial<Record<CandyType, number>>;
   bubbleGroup?: Phaser.GameObjects.Container;
 }
@@ -53,8 +53,6 @@ class PlayScene extends Phaser.Scene {
   private dayText!: Phaser.GameObjects.Text;
   private rentWarning?: Phaser.GameObjects.Text;
   private jarContainers: Phaser.GameObjects.Container[] = [];
-  private counterTop!: Phaser.GameObjects.Rectangle;
-  private orderArea!: Phaser.GameObjects.Container;
   private dayBanner?: Phaser.GameObjects.Container;
 
   constructor(onScore: (n: number) => void) {
@@ -76,19 +74,18 @@ class PlayScene extends Phaser.Scene {
     this.drawHUD();
     this.drawOrderArea();
 
-    // Start day loop
     this.startDay();
   }
 
   // ── Background ──────────────────────────────────────────────────────────────
   private drawBackground(): void {
-    // Soft pastel shop background
-    const bg = this.add.rectangle(VW / 2, VH / 2, VW, VH, 0xfff0f8);
+    // Sky blue base
+    const bg = this.add.rectangle(VW / 2, VH / 2, VW, VH, 0x5ba4cf);
     bg.setDepth(0);
 
-    // Wallpaper stripes
+    // Lighter blue vertical stripes for a subtle wallpaper effect
     for (let i = 0; i < 12; i++) {
-      const stripe = this.add.rectangle(i * 44 + 22, VH / 2, 22, VH, 0xfce4f0, 0.35);
+      const stripe = this.add.rectangle(i * 44 + 22, VH / 2, 22, VH, 0x74b9ff, 0.18);
       stripe.setDepth(0);
     }
 
@@ -118,10 +115,8 @@ class PlayScene extends Phaser.Scene {
 
   // ── Counter ─────────────────────────────────────────────────────────────────
   private drawCounter(): void {
-    // Counter top
-    this.counterTop = this.add.rectangle(VW / 2, VH - 100, VW, 200, 0xd4956a).setDepth(1);
-    this.counterTop.setStrokeStyle(4, 0xb06030);
-
+    this.add.rectangle(VW / 2, VH - 100, VW, 200, 0xd4956a).setDepth(1)
+      .setStrokeStyle(4, 0xb06030);
     // Counter surface highlight
     this.add.rectangle(VW / 2, VH - 180, VW, 12, 0xfff3e0).setDepth(2);
   }
@@ -135,15 +130,12 @@ class PlayScene extends Phaser.Scene {
       const x = positions[i] as number;
       const container = this.add.container(x, jarY).setDepth(3);
 
-      // Jar body (rounded rectangle via graphics)
       const gfx = this.add.graphics();
       const jarW = 90, jarH = 110;
 
       // Jar glass body
       gfx.fillStyle(JAR_COLOURS[type], 0.25);
       gfx.fillRoundedRect(-jarW / 2, -jarH + 10, jarW, jarH, 12);
-
-      // Jar outline
       gfx.lineStyle(3, JAR_COLOURS[type], 1);
       gfx.strokeRoundedRect(-jarW / 2, -jarH + 10, jarW, jarH, 12);
 
@@ -157,7 +149,7 @@ class PlayScene extends Phaser.Scene {
       gfx.lineStyle(2, 0xffffff, 0.5);
       gfx.strokeRoundedRect(-jarW / 2 - 4, -jarH + 4, jarW + 8, 18, 6);
 
-      // Shine on jar
+      // Shine
       gfx.fillStyle(0xffffff, 0.3);
       gfx.fillRoundedRect(-jarW / 2 + 8, -jarH + 22, 14, jarH - 28, 6);
 
@@ -170,7 +162,8 @@ class PlayScene extends Phaser.Scene {
       container.add(emoji);
 
       // Label below jar
-      const labelBg = this.add.rectangle(0, 18, 84, 26, parseInt(JAR_LABEL_BG[type].replace("#", ""), 16))
+      const labelBg = this.add.rectangle(0, 18, 84, 26,
+        parseInt(JAR_LABEL_BG[type].replace("#", ""), 16))
         .setStrokeStyle(2, 0xffffff);
       const labelText = this.add.text(0, 18, JAR_LABEL[type], {
         fontFamily: "Manrope, sans-serif",
@@ -185,7 +178,7 @@ class PlayScene extends Phaser.Scene {
 
       this.jarContainers.push(container);
 
-      // Hit area — invisible rect covering the whole jar
+      // Invisible hit zone
       const hitZone = this.add.rectangle(x, jarY - 40, 100, 140, 0x000000, 0)
         .setInteractive({ useHandCursor: true })
         .setDepth(4);
@@ -202,8 +195,7 @@ class PlayScene extends Phaser.Scene {
 
   // ── HUD ─────────────────────────────────────────────────────────────────────
   private drawHUD(): void {
-    // Money display
-    const moneyBg = this.add.rectangle(VW - 80, 80, 140, 36, 0x2d3436).setDepth(5);
+    const moneyBg = this.add.rectangle(VW - 80, 80, 140, 36, 0x1a3a5c).setDepth(5);
     moneyBg.setStrokeStyle(2, 0xffd700);
     this.moneyText = this.add.text(VW - 80, 80, "💰 $0", {
       fontFamily: "Manrope, sans-serif",
@@ -212,31 +204,26 @@ class PlayScene extends Phaser.Scene {
       color: "#ffd700",
     }).setOrigin(0.5).setDepth(6);
 
-    // Day display
-    const dayBg = this.add.rectangle(60, 80, 100, 36, 0x2d3436).setDepth(5);
-    dayBg.setStrokeStyle(2, 0x74b9ff);
+    const dayBg = this.add.rectangle(60, 80, 100, 36, 0x1a3a5c).setDepth(5);
+    dayBg.setStrokeStyle(2, 0xffffff);
     this.dayText = this.add.text(60, 80, "Day 1", {
       fontFamily: "Manrope, sans-serif",
       fontSize: "18px",
       fontStyle: "bold",
-      color: "#74b9ff",
+      color: "#ffffff",
     }).setOrigin(0.5).setDepth(6);
   }
 
-  // ── Order area (speech bubble zone) ─────────────────────────────────────────
+  // ── Order area ───────────────────────────────────────────────────────────────
   private drawOrderArea(): void {
-    this.orderArea = this.add.container(VW / 2, 200).setDepth(5);
+    this.add.container(VW / 2, 200).setDepth(5);
   }
 
-  // ── Day logic ───────────────────────────────────────────────────────────────
+  // ── Day logic ────────────────────────────────────────────────────────────────
   private startDay(): void {
     this.dayTimer?.remove();
     this.showDayBanner();
-
-    // Spawn first order shortly after banner
     this.time.delayedCall(1200, () => this.spawnOrder());
-
-    // Every NEW_DAY_INTERVAL, end the day and charge rent
     this.dayTimer = this.time.addEvent({
       delay: NEW_DAY_INTERVAL,
       loop: true,
@@ -246,22 +233,18 @@ class PlayScene extends Phaser.Scene {
 
   private endDay(): void {
     this.day += 1;
-    const rent = DAILY_RENT;
-    this.money -= rent;
-    if (this.money < 0) this.money = 0;
+    this.money = Math.max(0, this.money - DAILY_RENT);
     this.onScore(this.money);
     this.updateMoneyText();
-    this.showRentNotice(rent);
-    this.time.delayedCall(1800, () => {
-      this.showDayBanner();
-    });
+    this.showRentNotice(DAILY_RENT);
+    this.time.delayedCall(1800, () => this.showDayBanner());
   }
 
   private showDayBanner(): void {
     this.dayBanner?.destroy();
     const container = this.add.container(VW / 2, VH / 2).setDepth(20);
 
-    const bg = this.add.rectangle(0, 0, 300, 90, 0x2d3436, 0.92);
+    const bg = this.add.rectangle(0, 0, 300, 90, 0x1a3a5c, 0.92);
     bg.setStrokeStyle(3, 0xffd700);
     const title = this.add.text(0, -16, `☀️ Day ${this.day}`, {
       fontFamily: "Fraunces, serif",
@@ -278,7 +261,6 @@ class PlayScene extends Phaser.Scene {
     this.dayText.setText(`Day ${this.day}`);
     this.dayBanner = container;
 
-    // Fade out after 1.5s
     this.tweens.add({
       targets: container,
       alpha: 0,
@@ -295,7 +277,7 @@ class PlayScene extends Phaser.Scene {
       fontSize: "22px",
       fontStyle: "bold",
       color: "#ff7675",
-      stroke: "#2d3436",
+      stroke: "#1a3a5c",
       strokeThickness: 3,
     }).setOrigin(0.5).setDepth(25);
     this.rentWarning = notice;
@@ -310,11 +292,10 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
-  // ── Order generation ─────────────────────────────────────────────────────────
+  // ── Order generation ──────────────────────────────────────────────────────────
   private spawnOrder(): void {
-    if (this.currentOrder) return; // wait for current to be filled
+    if (this.currentOrder) return;
 
-    // Build a random order: 1–3 types, each 1–3 qty
     const types = Phaser.Utils.Array.Shuffle([...JAR_TYPES]) as CandyType[];
     const numTypes = Phaser.Math.Between(1, 3);
     const items: Partial<Record<CandyType, number>> = {};
@@ -330,7 +311,6 @@ class PlayScene extends Phaser.Scene {
   private renderOrderBubble(): void {
     if (!this.currentOrder) return;
 
-    // Clear old bubble
     this.currentOrder.bubbleGroup?.destroy();
 
     const order = this.currentOrder;
@@ -348,7 +328,6 @@ class PlayScene extends Phaser.Scene {
     const bubbleY = 170;
     const container = this.add.container(bubbleX, bubbleY).setDepth(10);
 
-    // Bubble background
     const padX = 28, padY = 20;
     const lineH = 32;
     const bubbleH = lines.length * lineH + padY * 2;
@@ -360,19 +339,16 @@ class PlayScene extends Phaser.Scene {
     bubbleBg.lineStyle(3, 0xff6ec7, 1);
     bubbleBg.strokeRoundedRect(-bubbleW / 2, -bubbleH / 2, bubbleW, bubbleH, 18);
 
-    // Speech bubble tail pointing down
+    // Speech bubble tail
     bubbleBg.fillStyle(0xffffff, 1);
     bubbleBg.fillTriangle(-16, bubbleH / 2, 16, bubbleH / 2, 0, bubbleH / 2 + 22);
     bubbleBg.lineStyle(3, 0xff6ec7, 1);
     bubbleBg.strokeTriangle(-16, bubbleH / 2, 16, bubbleH / 2, 0, bubbleH / 2 + 22);
-
-    // Cover the triangle base with white so the seam is hidden
     bubbleBg.fillStyle(0xffffff, 1);
     bubbleBg.fillRect(-18, bubbleH / 2 - 4, 36, 8);
 
     container.add(bubbleBg);
 
-    // "Order:" header
     const header = this.add.text(0, -bubbleH / 2 + 14, "🛒 Order:", {
       fontFamily: "Fraunces, serif",
       fontSize: "17px",
@@ -380,7 +356,6 @@ class PlayScene extends Phaser.Scene {
     }).setOrigin(0.5, 0);
     container.add(header);
 
-    // Order lines
     lines.forEach((line, idx) => {
       const ty = -bubbleH / 2 + padY + 28 + idx * lineH;
       const txt = this.add.text(-bubbleW / 2 + padX, ty, line, {
@@ -391,7 +366,7 @@ class PlayScene extends Phaser.Scene {
       container.add(txt);
     });
 
-    // Customer character (simple smiley face)
+    // Customer emoji
     const face = this.add.text(-bubbleW / 2 - 44, 0, "🧒", {
       fontSize: "40px",
     }).setOrigin(0.5);
@@ -399,7 +374,6 @@ class PlayScene extends Phaser.Scene {
 
     order.bubbleGroup = container;
 
-    // Bounce in
     container.setScale(0.6);
     container.setAlpha(0);
     this.tweens.add({
@@ -411,7 +385,7 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
-  // ── Jar tap ─────────────────────────────────────────────────────────────────
+  // ── Jar tap ───────────────────────────────────────────────────────────────────
   private onJarTap(type: CandyType): void {
     if (!this.currentOrder) return;
 
@@ -419,7 +393,6 @@ class PlayScene extends Phaser.Scene {
     const got  = this.currentOrder.filled[type] ?? 0;
 
     if (want === 0) {
-      // Not in this order — shake the jar
       const idx = JAR_TYPES.indexOf(type);
       const jar = this.jarContainers[idx];
       if (jar) this.shakeObject(jar);
@@ -428,19 +401,16 @@ class PlayScene extends Phaser.Scene {
     }
 
     if (got >= want) {
-      // Already filled
       this.showFloatingText("Already got it! ✅", VW / 2, VH - 220, "#00b894");
       return;
     }
 
-    // Fill one candy of this type
     this.currentOrder.filled[type] = got + 1;
-    this.showFloatingText(`+${JAR_EMOJI[type]}`, this.jarContainers[JAR_TYPES.indexOf(type)]?.x ?? VW / 2, VH - 220, "#ffd700");
+    const jarX = this.jarContainers[JAR_TYPES.indexOf(type)]?.x ?? VW / 2;
+    this.showFloatingText(`+${JAR_EMOJI[type]}`, jarX, VH - 220, "#ffd700");
 
-    // Refresh bubble
     this.renderOrderBubble();
 
-    // Check if order is complete
     if (this.isOrderComplete()) {
       this.time.delayedCall(300, () => this.completeOrder());
     }
@@ -459,7 +429,6 @@ class PlayScene extends Phaser.Scene {
   private completeOrder(): void {
     if (!this.currentOrder) return;
 
-    // Count total candies sold
     let total = 0;
     for (const type of JAR_TYPES) {
       total += this.currentOrder.items[type] ?? 0;
@@ -469,21 +438,16 @@ class PlayScene extends Phaser.Scene {
     this.onScore(this.money);
     this.updateMoneyText();
 
-    // Show big earn notice
     this.showFloatingText(`💰 +$${earned}!`, VW / 2, VH - 280, "#ffd700", "28px");
-
-    // Confetti burst
     this.spawnConfetti(VW / 2, VH - 250);
 
-    // Clear order
     this.currentOrder.bubbleGroup?.destroy();
     this.currentOrder = null;
 
-    // Spawn next order after a short delay
     this.time.delayedCall(1200, () => this.spawnOrder());
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   private updateMoneyText(): void {
     this.moneyText.setText(`💰 $${this.money}`);
     this.tweens.add({
@@ -495,13 +459,7 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
-  private showFloatingText(
-    msg: string,
-    x: number,
-    y: number,
-    color: string,
-    size = "20px",
-  ): void {
+  private showFloatingText(msg: string, x: number, y: number, color: string, size = "20px"): void {
     const txt = this.add.text(x, y, msg, {
       fontFamily: "Manrope, sans-serif",
       fontSize: size,
@@ -555,7 +513,7 @@ class PlayScene extends Phaser.Scene {
   }
 
   update(): void {
-    // Nothing to poll — all driven by events/timers
+    // All driven by events/timers
   }
 }
 
@@ -566,7 +524,7 @@ export function startGame(parent: HTMLElement, onScore: (n: number) => void): ()
     parent,
     width: VW,
     height: VH,
-    backgroundColor: "#fdf0f8",
+    backgroundColor: "#5ba4cf",
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
